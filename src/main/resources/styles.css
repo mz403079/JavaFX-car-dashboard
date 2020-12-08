@@ -1,0 +1,6 @@
+.hbox {
+  -fx-background-image: url('wycieraczka.png');
+  -fx-color: RED;
+  -fx-padding: 15;
+  -fx-spacing: 10;
+}
