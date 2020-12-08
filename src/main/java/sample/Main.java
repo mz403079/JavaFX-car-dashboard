@@ -3,10 +3,17 @@ import eu.hansolo.tilesfx.Tile.TextSize;
 import eu.hansolo.tilesfx.tools.FlowGridPane;
 import java.util.Locale;
 import java.util.Random;
+import java.util.TreeMap;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleLongProperty;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
@@ -38,6 +45,10 @@ public class Main extends Application {
   private long lastTimerCall;
   private AnimationTimer timer;
   private static final Random RND = new Random();
+
+  private TreeMap<Integer, Double> speedCoefficients = new TreeMap<>();
+  private TreeMap<Integer, Double> roundsReductions = new TreeMap<>();
+  private int currentGear = 1;
 
   public void updateMeter(Tile tile) {
     if (tile.getValue() < tile.getMaxValue() * 0.4) {
@@ -130,24 +141,25 @@ public class Main extends Application {
         .textVisible(true)
         .roundedCorners(false)
         .build();
-    lastTimerCall = System.nanoTime();
-    timer = new AnimationTimer() {
-      @Override
-      public void handle(long now) {
-        if (now > lastTimerCall + 3_500_000_000L) {
-          speedometer.setValue(
-              RND.nextDouble() * speedometer.getRange() * 1.0 + speedometer.getMinValue());
-          tachometer
-              .setValue(RND.nextDouble() * tachometer.getRange() * 1.0 + tachometer.getMinValue());
-          updateMeter(speedometer);
-          updateMeter(tachometer);
-          engineTemp.setValue(RND.nextDouble() * 100);
-          topTile.setValue(RND.nextDouble() * topTile.getRange() * 1.5 + topTile.getMinValue());
-          fluidTile.setValue(RND.nextDouble() * 100);
-          lastTimerCall = now;
-        }
-      }
-    };
+//    lastTimerCall = System.nanoTime();
+//    timer = new AnimationTimer() {
+//      @Override
+//      public void handle(long now) {
+//        if (now > lastTimerCall + 3_500_000_000L) {
+//          speedometer.setValue(
+//              RND.nextDouble() * speedometer.getRange() * 1.0 + speedometer.getMinValue());
+//          tachometer
+//              .setValue(RND.nextDouble() * tachometer.getRange() * 1.0 + tachometer.getMinValue());
+//          updateMeter(speedometer);
+//          updateMeter(tachometer);
+//          engineTemp.setValue(RND.nextDouble() * 100);
+//          topTile.setValue(RND.nextDouble() * topTile.getRange() * 1.5 + topTile.getMinValue());
+//          fluidTile.setValue(RND.nextDouble() * 100);
+//          lastTimerCall = now;
+//        }
+//      }
+//    };
+
 
   }
 
@@ -174,7 +186,49 @@ public class Main extends Application {
     scene.getStylesheets().add("styles.css");
     primaryStage.setScene(scene);
     primaryStage.setResizable(false);
-    timer.start();
+    //timer.start();
+
+    /* speed = rpm/100 / gears.get(gear) */
+    speedCoefficients.put(1, 1.22304);
+    speedCoefficients.put(2, 0.73532);
+    speedCoefficients.put(3, 0.5187);
+    speedCoefficients.put(4, 0.39);
+    speedCoefficients.put(5, 0.31746);
+    roundsReductions.put(2, 15d);
+    roundsReductions.put(3, 17.5);
+    roundsReductions.put(4, 18.5);
+    roundsReductions.put(5, 20d);
+    tachometer.setValue(5);
+
+    scene.setOnKeyPressed(keyEvent -> {
+      if (keyEvent.getCode() == KeyCode.UP) {
+        if (tachometer.getValue() < 65) {
+          tachometer.setValue(1.001 * tachometer.getValue() + 0.1);
+        }
+        if (speedometer.getValue() < 188) {
+          speedometer.setValue(tachometer.getValue() / speedCoefficients.get(currentGear));
+        }
+        if (currentGear < 5 && (int) tachometer.getValue() == 25) {
+          currentGear += 1;
+          tachometer.setValue(roundsReductions.get(currentGear));
+        }
+        updateMeter(tachometer);
+        updateMeter(speedometer);
+      }
+      else if (keyEvent.getCode() == KeyCode.DOWN) {
+        if (tachometer.getValue() > 5) {
+          tachometer.setValue(0.99 * tachometer.getValue() - (tachometer.getValue() > 1 ? 0.1 : 0));
+        }
+        if (speedometer.getValue() > 0) {
+          speedometer.setValue(0.99 * speedometer.getValue() - (speedometer.getValue() > 0.2 ? 0.1 : 0));
+        }
+        if (currentGear > 1 && (int) tachometer.getValue() == 25) {
+          currentGear -= 1;
+        }
+        updateMeter(tachometer);
+        updateMeter(speedometer);
+      }
+    });
     primaryStage.show();
   }
 
