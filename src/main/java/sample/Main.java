@@ -9,6 +9,7 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -17,6 +18,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import eu.hansolo.tilesfx.Section;
@@ -27,6 +30,7 @@ import eu.hansolo.tilesfx.TileBuilder;
 import eu.hansolo.tilesfx.colors.Bright;
 import eu.hansolo.tilesfx.colors.Dark;
 import eu.hansolo.tilesfx.tools.Helper;
+import javafx.util.Duration;
 
 public class Main extends Application {
 
@@ -48,6 +52,7 @@ public class Main extends Application {
 
   private TreeMap<Integer, Double> speedCoefficients = new TreeMap<>();
   private TreeMap<Integer, Double> roundsReductions = new TreeMap<>();
+  private boolean isBlinkerOn = false;
   private int currentGear = 1;
 
   public void updateMeter(Tile tile) {
@@ -141,6 +146,19 @@ public class Main extends Application {
         .textVisible(true)
         .roundedCorners(false)
         .build();
+
+    /* speed = rpm/100 / gears.get(gear) */
+    speedCoefficients.put(1, 1.22304);
+    speedCoefficients.put(2, 0.73532);
+    speedCoefficients.put(3, 0.5187);
+    speedCoefficients.put(4, 0.39);
+    speedCoefficients.put(5, 0.31746);
+    roundsReductions.put(2, 15d);
+    roundsReductions.put(3, 17.5);
+    roundsReductions.put(4, 18.5);
+    roundsReductions.put(5, 20d);
+    tachometer.setValue(5);
+
 //    lastTimerCall = System.nanoTime();
 //    timer = new AnimationTimer() {
 //      @Override
@@ -159,8 +177,6 @@ public class Main extends Application {
 //        }
 //      }
 //    };
-
-
   }
 
   @Override
@@ -186,36 +202,44 @@ public class Main extends Application {
     scene.getStylesheets().add("styles.css");
     primaryStage.setScene(scene);
     primaryStage.setResizable(false);
-    //timer.start();
 
-    /* speed = rpm/100 / gears.get(gear) */
-    speedCoefficients.put(1, 1.22304);
-    speedCoefficients.put(2, 0.73532);
-    speedCoefficients.put(3, 0.5187);
-    speedCoefficients.put(4, 0.39);
-    speedCoefficients.put(5, 0.31746);
-    roundsReductions.put(2, 15d);
-    roundsReductions.put(3, 17.5);
-    roundsReductions.put(4, 18.5);
-    roundsReductions.put(5, 20d);
-    tachometer.setValue(5);
+    Media gearSound = new Media(getClass().getResource("/sound_001.wav").toExternalForm());
+    Media lastGearSound = new Media(getClass().getResource("/sound_002.wav").toExternalForm());
+    Media releasedSound = new Media(getClass().getResource("/sound_003.wav").toExternalForm());
+    Media turnSound = new Media(getClass().getResource("/turn.wav").toExternalForm());
+    MediaPlayer gearPlayer = new MediaPlayer(gearSound);
+    MediaPlayer lastGearPlayer = new MediaPlayer(lastGearSound);
+    MediaPlayer releasedPlayer = new MediaPlayer(releasedSound);
+    MediaPlayer turnPlayer = new MediaPlayer(turnSound);
+    turnPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+    lastGearPlayer.setCycleCount(MediaPlayer.INDEFINITE);
 
     scene.setOnKeyPressed(keyEvent -> {
       if (keyEvent.getCode() == KeyCode.UP) {
         if (tachometer.getValue() < 65) {
-          tachometer.setValue(1.001 * tachometer.getValue() + 0.1);
+          tachometer.setValue(1.005 * tachometer.getValue() + 0.1);
         }
         if (speedometer.getValue() < 188) {
           speedometer.setValue(tachometer.getValue() / speedCoefficients.get(currentGear));
         }
+        if (currentGear == 1 && !gearPlayer.getStatus().equals(MediaPlayer.Status.PLAYING)) {
+          gearPlayer.seek(Duration.millis(0));
+          gearPlayer.play();
+        }
         if (currentGear < 5 && (int) tachometer.getValue() == 25) {
           currentGear += 1;
           tachometer.setValue(roundsReductions.get(currentGear));
+          gearPlayer.seek(Duration.millis(0));
+          gearPlayer.play();
+        }
+        if (currentGear == 5 && !lastGearPlayer.getStatus().equals(MediaPlayer.Status.PLAYING)) {
+          gearPlayer.stop();
+          lastGearPlayer.seek(Duration.millis(0));
+          lastGearPlayer.play();
         }
         updateMeter(tachometer);
         updateMeter(speedometer);
-      }
-      else if (keyEvent.getCode() == KeyCode.DOWN) {
+      } else if (keyEvent.getCode() == KeyCode.DOWN) {
         if (tachometer.getValue() > 5) {
           tachometer.setValue(0.99 * tachometer.getValue() - (tachometer.getValue() > 1 ? 0.1 : 0));
         }
@@ -227,6 +251,23 @@ public class Main extends Application {
         }
         updateMeter(tachometer);
         updateMeter(speedometer);
+      } else if (keyEvent.getCode() == KeyCode.LEFT || keyEvent.getCode() == KeyCode.RIGHT) {
+        if (!isBlinkerOn) {
+          turnPlayer.seek(Duration.millis(0));
+          turnPlayer.play();
+          isBlinkerOn = true;
+        } else {
+          turnPlayer.stop();
+          isBlinkerOn = false;
+        }
+      }
+    });
+    scene.setOnKeyReleased(keyEvent -> {
+      if (keyEvent.getCode() == KeyCode.UP) {
+        gearPlayer.stop();
+        lastGearPlayer.stop();
+        releasedPlayer.seek(Duration.millis(0));
+        releasedPlayer.play();
       }
     });
     primaryStage.show();
