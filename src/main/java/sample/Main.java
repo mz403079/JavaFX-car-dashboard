@@ -9,12 +9,6 @@ import java.util.TreeMap;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.property.DoubleProperty;
-import javafx.beans.property.LongProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleLongProperty;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
@@ -36,13 +30,7 @@ import eu.hansolo.tilesfx.colors.Bright;
 import eu.hansolo.tilesfx.colors.Dark;
 import eu.hansolo.tilesfx.tools.Helper;
 import javafx.util.Duration;
-import javax.imageio.ImageTranscoder;
-import javax.imageio.ImageTypeSpecifier;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.metadata.IIOMetadata;
 import javax.swing.JButton;
-import org.apache.batik.transcoder.TranscoderException;
-import org.apache.batik.transcoder.TranscoderOutput;
 import javafx.embed.swing.SwingFXUtils;
 public class Main extends Application {
 
@@ -86,18 +74,22 @@ public class Main extends Application {
   public void init() {
     speedometer = TileBuilder.create()
         .skinType(SkinType.GAUGE)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TILE_WIDTH, TILE_HEIGHT)
         .unit("Kmh")
         .maxValue(200)
         .startFromZero(true)
         .decimals(0)
+        .valueColor(Color.ORANGE)
         .barColor(Color.WHITE)
-        .borderWidth(0)
         .thresholdColor(Color.WHITE)
+        .borderWidth(0)
+        .thresholdVisible(false)
         .roundedCorners(false)
         .build();
     tachometer = TileBuilder.create()
         .skinType(SkinType.GAUGE)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TILE_WIDTH, TILE_HEIGHT)
         .unit("Rpm\nx100")
         .text("x100")
@@ -107,10 +99,12 @@ public class Main extends Application {
         .textSize(TextSize.SMALLER)
         .barColor(Color.WHITE)
         .thresholdColor(Color.WHITE)
+        .thresholdVisible(false)
         .roundedCorners(false)
         .build();
     clockTile = TileBuilder.create()
         .skinType(SkinType.CLOCK)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TOP_TILE_WIDTH, TOP_TILE_HEIGHT)
         .locale(Locale.UK)
         .dateVisible(false)
@@ -119,6 +113,7 @@ public class Main extends Application {
         .build();
     topTile = TileBuilder.create()
         .skinType(SkinType.GAUGE)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TOP_TILE_WIDTH, TOP_TILE_HEIGHT)
         .title("")
         .unit("Kmh")
@@ -127,6 +122,7 @@ public class Main extends Application {
         .build();
     engineTemp = TileBuilder.create().
         skinType(SkinType.FIRE_SMOKE)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TOP_TILE_WIDTH, TOP_TILE_HEIGHT)
         .description("Engine temp")
         .unit("\u00b0C")
@@ -134,6 +130,7 @@ public class Main extends Application {
         .decimals(0)
         .build();
     fluidTile = TileBuilder.create().skinType(SkinType.FLUID)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TILE_WIDTH, 150)
         .title("50l")
         .unit("\u0025")
@@ -150,6 +147,7 @@ public class Main extends Application {
         .build();
     numberTile = TileBuilder.create()
         .skinType(SkinType.NUMBER)
+        .backgroundColor(Color.TRANSPARENT)
         .prefSize(TILE_WIDTH, 80)
         .textSize(TextSize.BIGGER)
         .value(999999)
@@ -192,9 +190,9 @@ public class Main extends Application {
   }
 
   @Override
-  public void start(Stage primaryStage) throws Exception {
+  public void start(Stage primaryStage) {
     window = primaryStage;
-    primaryStage.setTitle("Hello World");
+    primaryStage.setTitle("Car dashboard");
     BorderPane border = new BorderPane();
     FlowGridPane top = new FlowGridPane(2, 1, clockTile, engineTemp);
     border.setTop(top);
@@ -203,6 +201,7 @@ public class Main extends Application {
     AnchorPane pane = new AnchorPane();
 
     HBox hbox = new HBox();
+
     hbox.setSpacing(10);
     ArrayList<String> backgrounds = new ArrayList<>();
     backgrounds.add("turn-left");
@@ -210,10 +209,11 @@ public class Main extends Application {
     backgrounds.add("fan");
     backgrounds.add("malfunction");
     backgrounds.add("back-window");
-    for(int i = 0; i < 5; i++) {
+    backgrounds.add("back-window");   // add something else here
+    for(int i = 0; i < 6; i++) {
       Button button = new Button();
       button.setPrefSize(40, 40);
-      button.getStyleClass().add(backgrounds.get(i));
+      button.getStyleClass().addAll(backgrounds.get(i),"disabled");
       hbox.getChildren().add(button);
     }
     // make icon active
@@ -225,7 +225,8 @@ public class Main extends Application {
     pane.getChildren().addAll(hbox, fluidTile,numberTile);
     border.setCenter(pane);
     border.getStyleClass().add("bck");
-    Scene scene = new Scene(border, TILE_WIDTH * 3, 500);
+
+    Scene scene = new Scene(border, TILE_WIDTH * 3+20, 500);
     scene.getStylesheets().add("styles.css");
     primaryStage.setScene(scene);
     primaryStage.setResizable(false);
