@@ -1,6 +1,8 @@
 package sample;
 import eu.hansolo.tilesfx.Tile.TextSize;
 import eu.hansolo.tilesfx.tools.FlowGridPane;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Random;
 import java.util.TreeMap;
@@ -12,11 +14,14 @@ import javafx.beans.property.LongProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -31,7 +36,14 @@ import eu.hansolo.tilesfx.colors.Bright;
 import eu.hansolo.tilesfx.colors.Dark;
 import eu.hansolo.tilesfx.tools.Helper;
 import javafx.util.Duration;
-
+import javax.imageio.ImageTranscoder;
+import javax.imageio.ImageTypeSpecifier;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.metadata.IIOMetadata;
+import javax.swing.JButton;
+import org.apache.batik.transcoder.TranscoderException;
+import org.apache.batik.transcoder.TranscoderOutput;
+import javafx.embed.swing.SwingFXUtils;
 public class Main extends Application {
 
   Stage window;
@@ -54,7 +66,7 @@ public class Main extends Application {
   private TreeMap<Integer, Double> roundsReductions = new TreeMap<>();
   private boolean isBlinkerOn = false;
   private int currentGear = 1;
-
+  private JButton btn;
   public void updateMeter(Tile tile) {
     if (tile.getValue() < tile.getMaxValue() * 0.4) {
       tile.setBarColor(Bright.GREEN);
@@ -189,15 +201,30 @@ public class Main extends Application {
     border.setLeft(speedometer);
     border.setRight(tachometer);
     AnchorPane pane = new AnchorPane();
-    Region hbox = new Region();
-    hbox.setPrefSize(55, 40);
-    hbox.getStyleClass().add("hbox");
+
+    HBox hbox = new HBox();
+    hbox.setSpacing(10);
+    ArrayList<String> backgrounds = new ArrayList<>();
+    backgrounds.add("turn-left");
+    backgrounds.add("turn-right");
+    backgrounds.add("fan");
+    backgrounds.add("malfunction");
+    backgrounds.add("back-window");
+    for(int i = 0; i < 5; i++) {
+      Button button = new Button();
+      button.setPrefSize(40, 40);
+      button.getStyleClass().add(backgrounds.get(i));
+      hbox.getChildren().add(button);
+    }
+    // make icon active
+    // hbox.getChildren().get(1).getStyleClass().add("active");
+
     AnchorPane.setTopAnchor(fluidTile, 40d);
     AnchorPane.setBottomAnchor(fluidTile, 80d);
     AnchorPane.setBottomAnchor(numberTile,0d);
     pane.getChildren().addAll(hbox, fluidTile,numberTile);
     border.setCenter(pane);
-
+    border.getStyleClass().add("bck");
     Scene scene = new Scene(border, TILE_WIDTH * 3, 500);
     scene.getStylesheets().add("styles.css");
     primaryStage.setScene(scene);
