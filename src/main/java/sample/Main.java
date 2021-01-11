@@ -268,10 +268,14 @@ public class Main extends Application {
     tachometer.setOnTileEvent(e -> {
       if ((int) tachometer.getValue() >= 60) {
         checkEngineIcon.getStyleClass().remove("disabled");
-        checkEngineIcon.getStyleClass().add("active");
+        if (!checkEngineIcon.getStyleClass().contains("active")) {
+          checkEngineIcon.getStyleClass().add("active");
+        }
       } else {
         checkEngineIcon.getStyleClass().remove("active");
-        checkEngineIcon.getStyleClass().add("disabled");
+        if (!checkEngineIcon.getStyleClass().contains("disabled")) {
+          checkEngineIcon.getStyleClass().add("disabled");
+        }
       }
     });
 
