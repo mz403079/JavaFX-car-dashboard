@@ -1,14 +1,12 @@
 package sample;
+
 import eu.hansolo.tilesfx.Tile.TextSize;
 import eu.hansolo.tilesfx.tools.FlowGridPane;
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Locale;
-import java.util.Random;
 import java.util.TreeMap;
 
 import javafx.animation.Animation;
-import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -20,7 +18,6 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
@@ -34,32 +31,28 @@ import eu.hansolo.tilesfx.colors.Bright;
 import eu.hansolo.tilesfx.colors.Dark;
 import eu.hansolo.tilesfx.tools.Helper;
 import javafx.util.Duration;
-import javax.swing.JButton;
-import javafx.embed.swing.SwingFXUtils;
+
+
 public class Main extends Application {
 
   Stage window;
   private Tile speedometer;
   private Tile tachometer;
-  private Tile topTile;
   private Tile fluidTile;
   private Tile clockTile;
   private Tile numberTile;
   private Tile engineTemp;
   private static final double TILE_WIDTH = 300;
   private static final double TILE_HEIGHT = 325;
-  private static final double TOP_TILE_WIDTH = TILE_WIDTH *1.5;
+  private static final double TOP_TILE_WIDTH = TILE_WIDTH * 1.5;
   private static final double TOP_TILE_HEIGHT = 150;
-  private long lastTimerCall;
-  private AnimationTimer timer;
-  private static final Random RND = new Random();
 
   private final TreeMap<Integer, Double> speedCoefficients = new TreeMap<>();
   private final TreeMap<Integer, Double> roundsReductions = new TreeMap<>();
   private boolean isBlinkerOn = false;
   private boolean isHeaterOn = false;
   private int currentGear = 1;
-  private JButton btn;
+
   public void updateMeter(Tile tile) {
     if (tile.getValue() < tile.getMaxValue() * 0.4) {
       tile.setBarColor(Bright.GREEN);
@@ -85,7 +78,6 @@ public class Main extends Application {
         .maxValue(200)
         .startFromZero(true)
         .decimals(0)
-        .valueColor(Color.ORANGE)
         .barColor(Color.WHITE)
         .thresholdColor(Color.WHITE)
         .borderWidth(0)
@@ -116,15 +108,7 @@ public class Main extends Application {
         .roundedCorners(false)
         .running(true)
         .build();
-    topTile = TileBuilder.create()
-        .skinType(SkinType.GAUGE)
-        .backgroundColor(Color.TRANSPARENT)
-        .prefSize(TOP_TILE_WIDTH, TOP_TILE_HEIGHT)
-        .title("")
-        .unit("Kmh")
-        .fillWithGradient(false)
-        .roundedCorners(false)
-        .build();
+
     engineTemp = TileBuilder.create().
         skinType(SkinType.FIRE_SMOKE)
         .backgroundColor(Color.TRANSPARENT)
@@ -133,6 +117,7 @@ public class Main extends Application {
         .unit("\u00b0C")
         .roundedCorners(false)
         .decimals(0)
+        .value(21)
         .build();
     fluidTile = TileBuilder.create().skinType(SkinType.FLUID)
         .backgroundColor(Color.TRANSPARENT)
@@ -141,7 +126,8 @@ public class Main extends Application {
         .unit("\u0025")
         .decimals(0)
         .text("0l")
-        .tickLabelColor(Helper.getColorWithOpacity(Tile.FOREGROUND, 0.5))
+        .value(72)
+        .tickLabelColor(Helper.getColorWithOpacity(Tile.FOREGROUND, 0.1))
         .sections(new Section(0, 20, "Low", Helper.getColorWithOpacity(Dark.RED, 0.6)),
             new Section(20, 40, "Ok", Helper.getColorWithOpacity(Bright.ORANGE, 0.6)),
             new Section(40, 100, "High", Helper.getColorWithOpacity(Bright.GREEN, 0.6)))
@@ -174,7 +160,6 @@ public class Main extends Application {
     roundsReductions.put(5, 20d);
     tachometer.setValue(5);
 
-    fluidTile.setValue(72);
     numberTile.setValue(9);
     updateMeter(tachometer);
     updateMeter(speedometer);
@@ -200,24 +185,21 @@ public class Main extends Application {
     backgrounds.add("fan");
     backgrounds.add("malfunction");
     backgrounds.add("back-window");
-    backgrounds.add("back-window");   // add something else here
-    for(int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {
       Button button = new Button();
       button.setPrefSize(50, 40);
-      button.getStyleClass().addAll(backgrounds.get(i),"disabled");
+      button.getStyleClass().addAll(backgrounds.get(i), "disabled");
       hbox.getChildren().add(button);
     }
-    // make icon active
-    // hbox.getChildren().get(1).getStyleClass().add("active");
 
     AnchorPane.setTopAnchor(fluidTile, 40d);
     AnchorPane.setBottomAnchor(fluidTile, 80d);
-    AnchorPane.setBottomAnchor(numberTile,0d);
-    pane.getChildren().addAll(hbox, fluidTile,numberTile);
+    AnchorPane.setBottomAnchor(numberTile, 0d);
+    pane.getChildren().addAll(hbox, fluidTile, numberTile);
     border.setCenter(pane);
     border.getStyleClass().add("bck");
 
-    Scene scene = new Scene(border, TILE_WIDTH * 3+20, 500);
+    Scene scene = new Scene(border, TILE_WIDTH * 3 + 20, 500);
     scene.getStylesheets().add("styles.css");
     primaryStage.setScene(scene);
     primaryStage.setResizable(false);
@@ -240,17 +222,17 @@ public class Main extends Application {
     heaterPlayer.setCycleCount(MediaPlayer.INDEFINITE);
 
     Timeline fluidAnimRise = new Timeline(
-            new KeyFrame(Duration.seconds(3), e -> {
-              fluidTile.setValue(fluidTile.getValue() - 1);
-              numberTile.setValue(numberTile.getValue() + 1);
-            })
+        new KeyFrame(Duration.seconds(3), e -> {
+          fluidTile.setValue(fluidTile.getValue() - 1);
+          numberTile.setValue(numberTile.getValue() + 1);
+        })
     );
     Timeline fluidAnimIdle = new Timeline(
-            new KeyFrame(Duration.seconds(3), e -> {
-              if (numberTile.getValue() > 9) {
-                numberTile.setValue(numberTile.getValue() - 1);
-              }
-            })
+        new KeyFrame(Duration.seconds(3), e -> {
+          if (numberTile.getValue() > 9) {
+            numberTile.setValue(numberTile.getValue() - 1);
+          }
+        })
     );
     fluidAnimRise.setCycleCount(Animation.INDEFINITE);
     fluidAnimIdle.setCycleCount(Animation.INDEFINITE);
@@ -280,32 +262,32 @@ public class Main extends Application {
     });
 
     Timeline blinkerAnimLeft = new Timeline(
-            new KeyFrame(Duration.millis(650), e -> {
-              blinkerLeftIcon.getStyleClass().remove("disabled");
-              if (!blinkerLeftIcon.getStyleClass().contains("active")) {
-                blinkerLeftIcon.getStyleClass().add("active");
-              }
-            }),
-            new KeyFrame(Duration.millis(1300), e -> {
-              blinkerLeftIcon.getStyleClass().remove("active");
-              if (!blinkerLeftIcon.getStyleClass().contains("disabled")) {
-                blinkerLeftIcon.getStyleClass().add("disabled");
-              }
-            })
+        new KeyFrame(Duration.millis(650), e -> {
+          blinkerLeftIcon.getStyleClass().remove("disabled");
+          if (!blinkerLeftIcon.getStyleClass().contains("active")) {
+            blinkerLeftIcon.getStyleClass().add("active");
+          }
+        }),
+        new KeyFrame(Duration.millis(1300), e -> {
+          blinkerLeftIcon.getStyleClass().remove("active");
+          if (!blinkerLeftIcon.getStyleClass().contains("disabled")) {
+            blinkerLeftIcon.getStyleClass().add("disabled");
+          }
+        })
     );
     Timeline blinkerAnimRight = new Timeline(
-            new KeyFrame(Duration.millis(650), e -> {
-              blinkerRightIcon.getStyleClass().remove("disabled");
-              if (!blinkerRightIcon.getStyleClass().contains("active")) {
-                blinkerRightIcon.getStyleClass().add("active");
-              }
-            }),
-            new KeyFrame(Duration.millis(1300), e -> {
-              blinkerRightIcon.getStyleClass().remove("active");
-              if (!blinkerRightIcon.getStyleClass().contains("disabled")) {
-                blinkerRightIcon.getStyleClass().add("disabled");
-              }
-            })
+        new KeyFrame(Duration.millis(650), e -> {
+          blinkerRightIcon.getStyleClass().remove("disabled");
+          if (!blinkerRightIcon.getStyleClass().contains("active")) {
+            blinkerRightIcon.getStyleClass().add("active");
+          }
+        }),
+        new KeyFrame(Duration.millis(1300), e -> {
+          blinkerRightIcon.getStyleClass().remove("active");
+          if (!blinkerRightIcon.getStyleClass().contains("disabled")) {
+            blinkerRightIcon.getStyleClass().add("disabled");
+          }
+        })
     );
     blinkerAnimLeft.setCycleCount(Animation.INDEFINITE);
     blinkerAnimRight.setCycleCount(Animation.INDEFINITE);
@@ -345,7 +327,8 @@ public class Main extends Application {
           tachometer.setValue(0.99 * tachometer.getValue() - (tachometer.getValue() > 1 ? 0.1 : 0));
         }
         if (speedometer.getValue() > 0) {
-          speedometer.setValue(0.99 * speedometer.getValue() - (speedometer.getValue() > 0.2 ? 0.1 : 0));
+          speedometer
+              .setValue(0.99 * speedometer.getValue() - (speedometer.getValue() > 0.2 ? 0.1 : 0));
         }
         if (currentGear > 1 && (int) tachometer.getValue() == 25) {
           currentGear -= 1;
