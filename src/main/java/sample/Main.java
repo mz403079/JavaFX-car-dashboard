@@ -201,9 +201,9 @@ public class Main extends Application {
     backgrounds.add("malfunction");
     backgrounds.add("back-window");
     backgrounds.add("back-window");   // add something else here
-    for(int i = 0; i < 6; i++) {
+    for(int i = 0; i < 5; i++) {
       Button button = new Button();
-      button.setPrefSize(40, 40);
+      button.setPrefSize(50, 40);
       button.getStyleClass().addAll(backgrounds.get(i),"disabled");
       hbox.getChildren().add(button);
     }
