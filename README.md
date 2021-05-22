@@ -4,7 +4,7 @@ Project created in Java / JavaFX
 
 ## Authors
 
-Mateusz Zaborowski
+Mateusz Zaborowski <br>
 Kacper Gajewski
 
 ## Screenshots
