@@ -2,10 +2,10 @@
 
 Project created in Java / JavaFX
 
-##Authors
+## Authors
 
 Mateusz Zaborowski
 Kacper Gajewski
 
-##Screenshots
+## Screenshots
 ![Screenshot](screenshots/example.png)
